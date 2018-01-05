@@ -2,26 +2,31 @@ import React, { Component } from 'react';
 import './App.css';
 import { FormGroup, FormControl, InputGroup, Glyphicon } from 'react-bootstrap';
 import Profile from './Profile';
+import Gallery from './Gallery';
 
 class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            query: ''
+            query: '',
+            tracks: []
         }
     }
     
     search() {
         console.log('this.state', this.state);        
         const BASE_URL = 'https://api.spotify.com/v1/search?';
-        const FETCH_URL = BASE_URL + 'q=' + this.state.query + '&type=artist&limit=1';    
-        var accessToken = 'BQCjaD_ITdlx9mtDNQXoo1PoSPmKNtVbmlARCTphSHPN137xhpL5wMa5xZZPbaGmN3ORAgUTYLY7bui37Wj86ojWEAxhvSF9lhMW-0mtRGeoAVOdAitkwxGjOaYq1QdFI9fedBaDdSqn6b3z5zenA-i-WS4OLvHSgg'
+        let FETCH_URL = BASE_URL + 'q=' + this.state.query + '&type=artist&limit=1';    
+        const ALBUM_URL = 'https://api.spotify.com/v1/artists/';
+        var accessToken = 'BQAmOrgc4vzyYpfj48Gtzz4ibHVQ-PpR4luDEAzmoziNOk0RsvctB-JdDjZf-eXxBBIrdBFc_DzOOqgTTFqxx5JKQ3aOGCIO7IcPVIl_40up_nJQpx_pL-8WzEvb2dOoXb87WHkz8Ce9piXVQkhfxuGoLrEnikecaA'
         var myHeaders = new Headers();
 
         var myOptions = {
           method: 'GET',
           headers:  {
-            'Authorization': 'Bearer ' + accessToken
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-Type': 'application/json',
+        'Accept': 'application/json'
          },
           mode: 'cors',
           cache: 'default'
@@ -34,7 +39,16 @@ class App extends Component {
             const name = artist.name;
             console.log('artist', artist);
             this.setState({artist});
-        })   
+            
+            FETCH_URL = `${ALBUM_URL}${artist.id}/top-tracks?country=US&`
+            fetch(FETCH_URL, myOptions)
+                .then(response => response.json())
+                .then(json => {
+                console.log('artist\'s top tracks:', json);
+                const {tracks} = json;
+                this.setState({tracks});
+            })
+        });
     }
         
                 
@@ -63,12 +77,19 @@ class App extends Component {
                    </InputGroup>
                 </FormGroup>
                 </div>
-                <Profile
+                {
+          this.state.artist !== undefined
+          ?
+            <div>
+              <Profile
                 artist={this.state.artist}
+              />
+                  <Gallery 
+                  tracks={this.state.tracks} 
                   />
-                <div className="Gallery">
-                    Gallery
-                </div>
+            </div>
+          : <div></div>
+        }
                 </div>
             )
         }
